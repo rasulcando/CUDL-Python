@@ -14,3 +14,7 @@ $ source venv/bin/activate
 $ python app.py
 
 This will execute the app
+
+Else install gunicorn and run your app by it
+
+# gunicorn app-rds:app
