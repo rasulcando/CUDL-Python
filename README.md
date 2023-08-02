@@ -15,6 +15,6 @@ $ python app.py
 
 This will execute the app
 
-Else install gunicorn and run your app by it
+Else install gunicorn and run your app by it for Prod envs
 
-# gunicorn app-rds:app
+$ gunicorn app-rds:app
