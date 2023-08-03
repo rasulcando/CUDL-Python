@@ -56,6 +56,18 @@ def list_users():
     conn.close()
 
 
+# # API endpoint to check login by username
+def get_user_by_email(email):
+    conn = connect_to_database()
+    c = conn.cursor()
+    print("Get User By Email Initiated")
+    print(email)
+    c.execute('SELECT * FROM users WHERE email = %s', (email,))
+    user_data = c.fetchone()
+    conn.close()
+    return user_data
+
+
 # Helper function to insert a new user into the database
 def insert_user(name, email, password):
     conn = connect_to_database()
@@ -82,6 +94,34 @@ def create_user():
     return jsonify({"message": "User registered successfully"}), 201
 
 
+# Route for user login
+@app.route('/login', methods=['POST'])
+def login_user():
+    data = request.get_json()
+    if not data or "email" not in data or "password" not in data:
+        return jsonify({"message": "Invalid request data"}), 400
+
+    email = data["email"]
+    password = data["password"]
+
+    # Fetch the user by email from the database
+    # print(email)
+    user_data = get_user_by_email(email)
+    if not user_data:
+        return jsonify({"message": "User not found"}), 404
+    print(user_data)
+    # Get the hashed password from the database
+    hashed_password = user_data[2]
+
+    # Check if the entered password matches the hashed password
+    if check_password_hash(hashed_password, password):
+        # Generate a JWT token with the user's email as the identity
+        access_token = create_access_token(identity=email)
+        return jsonify({"message":"Login Successful", "access_token": access_token}), 200
+    else:
+        return jsonify({"message": "Invalid credentials"}), 401
+
+
 # API endpoint to update a user email
 @app.route('/users/update', methods=['PUT'])
 @jwt_required()
@@ -91,7 +131,10 @@ def update_user():
     data = request.get_json()
     if not data or "name" not in data or "email" not in data:
         return jsonify({"message": "Invalid request data"}), 400
-
+    email = data["email"]
+    user_data = get_user_by_email(email)
+    if not user_data:
+        return jsonify({"message": "User not found"}), 404
     c.execute('UPDATE users SET name=%s, email=%s WHERE email=%s', (data["name"], data["email"], data["email"]))
     conn.commit()
     return jsonify({"message": "User updated successfully"}), 200
@@ -114,46 +157,6 @@ def delete_user():
         c.execute('DELETE FROM users WHERE email=%s', (data["email"],))
         conn.commit()
         return jsonify({"message": "User deleted successfully"}), 200
-
-
-# # API endpoint to check login by username
-def get_user_by_email(email):
-    conn = connect_to_database()
-    c = conn.cursor()
-    print("Get User By Email Initiated")
-    print(email)
-    c.execute('SELECT * FROM users WHERE email = %s', (email,))
-    user_data = c.fetchone()
-    conn.close()
-    return user_data
-
-
-# Route for user login
-@app.route('/login', methods=['POST'])
-def login_user():
-    data = request.get_json()
-    if not data or "email" not in data or "password" not in data:
-        return jsonify({"message": "Invalid request data"}), 400
-
-    email = data["email"]
-    password = data["password"]
-
-    # Fetch the user by email from the database
-    # print(email)
-    user_data = get_user_by_email(email)
-    if not user_data:
-        return jsonify({"message": "User not found"}), 404
-
-    # Get the hashed password from the database
-    hashed_password = user_data[2]
-
-    # Check if the entered password matches the hashed password
-    if check_password_hash(hashed_password, password):
-        # Generate a JWT token with the user's email as the identity
-        access_token = create_access_token(identity=email)
-        return jsonify({"access_token": access_token}), 200
-    else:
-        return jsonify({"message": "Invalid credentials"}), 401
 
 
 # Helper function to update the user's password in the database
