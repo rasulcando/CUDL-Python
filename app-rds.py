@@ -29,10 +29,11 @@ c = conn.cursor()
 c.execute('''
     CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        name TEXT(50) NOT NULL,
+        name TEXT(50) NOT NULL ,
         email TEXT(100) NOT NULL,
         password TEXT(400) NOT NULL,
-        role_id INT
+        role_id INT,
+        UNIQUE(email(100))
     )
 ''')
 
