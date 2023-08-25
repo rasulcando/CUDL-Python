@@ -71,8 +71,9 @@ def list_users():
     c = conn.cursor()
     c.execute('SELECT * FROM users')
     users = [row_to_dict(row) for row in c.fetchall()]
-    return jsonify(users)
     conn.close()
+    return jsonify(users)
+    
 
 
 # # API endpoint to check login by username
@@ -189,7 +190,7 @@ def update_user():
 
 
 # API endpoint to delete a user by username
-@app.route('/user/delete', methods=['DELETE'])
+@app.route('/user', methods=['DELETE'])
 @jwt_required()
 def delete_user():
     jwt_values = get_jwt()
